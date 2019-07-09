@@ -329,7 +329,7 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
   }
   # If number of empty (omitted) tiles is > 0, print number of omitted tiles
   if (length(empty_tiles) > 0){
-    print(paste0(empty_tiles, " tiles didn't contain any geoinformation and were therefore omitted"))
+    print(paste0(length(empty_tiles), " tiles didn't contain any geoinformation and were therefore omitted"))
     # Remove empty tiles from fishnet polygon
     for (i in 1:length(empty_tiles)){
       current_empty_tile <- empty_tiles[i]
