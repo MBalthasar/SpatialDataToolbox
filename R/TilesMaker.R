@@ -300,10 +300,6 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
     # Assign original projection to polygon
     sp::proj4string(final_polygon) <- sp::CRS(as.character(crs(my_aoi)))
   }
-  # Write fishnet polygon into a new folder
-  output_fishnet <- paste0(output, "/Fishnet_poly")
-  dir.create(output_fishnet)
-  rgdal::writeOGR(obj=final_polygon, dsn=output_fishnet, layer="Fishnet_poly", driver="ESRI Shapefile")
 
   #################################
   ### Crop data to each polygon ###
@@ -312,7 +308,7 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
   output_tiles <- paste0(output, "/Tiles")
   dir.create(output_tiles)
   # In case of polygons, create variable that counts the number of empty tiles which will be omitted
-  empty_tiles <- 0
+  empty_tiles <- c()
   # Start for loop using each polygon for cropping
   for (i in 1:nrow(final_polygon)){
     print(paste0("Cropping user_file into subset ", i, " of ", nrow(final_polygon)))
@@ -328,13 +324,24 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
       rgdal::writeOGR(obj=current_file, dsn=output_tiles, layer=current_name, driver="ESRI Shapefile")
     } else if (is.null(current_file) == T){
       # If tile is empty, add on the the empty tile counter
-      empty_tiles <- empty_tiles + 1
+      empty_tiles <- c(empty_tiles, current_name)
     }
   }
   # If number of empty (omitted) tiles is > 0, print number of omitted tiles
-  if (empty_tiles > 0){
+  if (length(empty_tiles) > 0){
     print(paste0(empty_tiles, " tiles didn't contain any geoinformation and were therefore omitted"))
+    # Remove empty tiles from fishnet polygon
+    for (i in 1:length(empty_tiles)){
+      current_empty_tile <- empty_tiles[i]
+      final_polygon <- final_polygon[final_polygon$Id != current_empty_tile,]
+    }
   }
+
+  # Write fishnet polygon into a new folder
+  output_fishnet <- paste0(output, "/Fishnet_poly")
+  dir.create(output_fishnet)
+  rgdal::writeOGR(obj=final_polygon, dsn=output_fishnet, layer="Fishnet_poly", driver="ESRI Shapefile")
+
   print(paste0("Done."))
   # Return the fishnet shapefile
   return(final_polygon)
