@@ -22,6 +22,7 @@
 #' library(raster)
 #' library(rgdal)
 #' library(rgeos)
+#' library(geosphere)
 #'
 #' # Load sample shapefile including the borders of vietnam
 #' vnm_shp <- raster::shapefile(system.file(package = "SpatialDataToolbox", "extdata",
@@ -80,9 +81,14 @@ FishnetFunction <- function(my_poly, extent_only, diff_factor, length_factor){
     } else {
       my_poly_reproj <- my_poly
     }
+    # Get extent of input poly
+    my_extent <- as(raster::extent(my_poly), 'SpatialPolygons')
+    sp::proj4string(my_extent) <- sp::CRS(as.character(raster::crs(my_poly)))
+    # Get centroid of extent
+    my_centroid <- geosphere::centroid(my_extent)
     # Define zone and hemisphere based on longlat information for UTM projection
-    my_zone <- as.character(floor((sp::coordinates(my_poly)[1] + 180) / 6) + 1)
-    my_hemisphere <- if(sp::coordinates(my_poly)[2] >= 0){""} else {" +south"}
+    my_zone <- as.character(floor((sp::coordinates(my_centroid)[1] + 180) / 6) + 1)
+    my_hemisphere <- if(sp::coordinates(my_centroid)[2] >= 0){""} else {" +south"}
     # Define character string for the respective UTM projection
     my_utm_proj <- paste0("+proj=utm +zone=",
                           my_zone,

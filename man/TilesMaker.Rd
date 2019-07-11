@@ -31,6 +31,7 @@ The output data will be reprojected to UTM.
 library(sp)
 library(raster)
 library(rgdal)
+library(geosphere)
 
 # Load sample raster file
 my_raster <- raster::brick(system.file(package = "SpatialDataToolbox", "extdata", "landsat_sample.tif"))

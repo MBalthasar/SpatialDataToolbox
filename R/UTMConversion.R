@@ -11,6 +11,7 @@
 #' library(sp)
 #' library(raster)
 #' library(rgdal)
+#' library(geosphere)
 #'
 #' # Create a test polygon within Nigeria
 #' my_extent <- extent(5,7,8,10)
@@ -29,11 +30,16 @@ UTMConversion <- function(user_file){
   if (substr(user_crs, 0, 13) != "+proj=longlat"){
     stop("User file has to be in longlat projection.")
   }
+  # Define extent
+  my_extent <- as(raster::extent(user_file), 'SpatialPolygons')
+  sp::proj4string(my_extent) <- sp::CRS(as.character(crs(user_file)))
+  # Get centroid of extent
+  my_centroid <- geosphere::centroid(my_extent)
   # Define Zone for UTM projection
-  my_zone <- as.character(floor((sp::coordinates(user_file)[1] + 180) / 6) + 1)
+  my_zone <- as.character(floor((sp::coordinates(my_centroid)[1] + 180) / 6) + 1)
   # Define hemisphere for UTM projection.
   # For the nothern hemisphere no information is required, only for the souther hemisphere
-  my_hemisphere <- if(sp::coordinates(user_file)[2] >= 0){""} else {" +south"}
+  my_hemisphere <- if(sp::coordinates(my_centroid)[2] >= 0){""} else {" +south"}
   # Define character string for the respective UTM projection
   utm_proj <- paste0("+proj=utm +zone=", my_zone, my_hemisphere,
                      " +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")

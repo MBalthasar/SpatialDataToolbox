@@ -31,6 +31,7 @@ library(sp)
 library(raster)
 library(rgdal)
 library(rgeos)
+library(geosphere)
 
 # Load sample shapefile including the borders of vietnam
 vnm_shp <- raster::shapefile(system.file(package = "SpatialDataToolbox", "extdata",

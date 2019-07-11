@@ -22,6 +22,7 @@
 #' library(sp)
 #' library(raster)
 #' library(rgdal)
+#' library(geosphere)
 #'
 #' # Load sample raster file
 #' my_raster <- raster::brick(system.file(package = "SpatialDataToolbox", "extdata", "landsat_sample.tif"))
@@ -126,9 +127,11 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
       # Reproject my_aoi to longlat
       my_aoi <- sp::spTransform(my_aoi, CRS=longlat_proj)
     }
+    # Get centroid of extent
+    my_centroid <- geosphere::centroid(my_aoi)
     # Define zone and hemisphere based on longlat information for UTM projection
-    my_zone <- as.character(floor((coordinates(my_aoi)[1] + 180) / 6) + 1)
-    my_hemisphere <- if(sp::coordinates(my_aoi)[2] >= 0){""} else {" +south"}
+    my_zone <- as.character(floor((coordinates(my_centroid)[1] + 180) / 6) + 1)
+    my_hemisphere <- if(sp::coordinates(my_centroid)[2] >= 0){""} else {" +south"}
     # Define character string for the respective UTM projection
     my_utm_proj <- paste0("+proj=utm +zone=",
                           my_zone,

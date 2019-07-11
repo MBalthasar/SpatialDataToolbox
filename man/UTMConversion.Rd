@@ -20,6 +20,7 @@ projection into the corresponding UTM projection.
 library(sp)
 library(raster)
 library(rgdal)
+library(geosphere)
 
 # Create a test polygon within Nigeria
 my_extent <- extent(5,7,8,10)
