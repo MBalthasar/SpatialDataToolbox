@@ -75,7 +75,7 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
   # If no user_aoi is defined, use the extent of the user_file and convert it to a "SpatialPolygons"
   if (missing(user_aoi)){
     print(paste0("No user_aoi defined. Using extent of user_file instead."))
-    my_aoi <- as(extent(user_file), 'SpatialPolygons')
+    my_aoi <- as(raster::extent(user_file), 'SpatialPolygons')
     proj4string(my_aoi) <- sp::CRS(as.character(crs(user_file)))
     # Since the extent of the user file is being used, no croping is needed
     my_file <- user_file
