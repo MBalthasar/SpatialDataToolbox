@@ -70,6 +70,7 @@ FishnetFunction <- function(my_poly, extent_only, diff_factor, length_factor){
   if (substr(current_proj, 0, 9) == "+proj=utm"){
     print(paste0("Data has been provided in UTM projection."))
     my_poly_reproj <- my_poly
+    my_utm_proj <- raster::crs(my_poly)
     # If Projection is not UTM, data will be reprojected
   } else {
     print(paste0("Data will be reprojected to UTM."))
@@ -162,7 +163,7 @@ FishnetFunction <- function(my_poly, extent_only, diff_factor, length_factor){
       }
     }
     # Assign original projection to polygon
-    sp::proj4string(final_polygon) <- sp::CRS(my_utm_proj)
+    sp::proj4string(final_polygon) <- my_utm_proj
 
     ####################################
     ### Apply length_factor approach ###
@@ -251,7 +252,7 @@ FishnetFunction <- function(my_poly, extent_only, diff_factor, length_factor){
       }
     }
     # Assign original projection to polygon
-    sp::proj4string(final_polygon) <- sp::CRS(my_utm_proj)
+    sp::proj4string(final_polygon) <- my_utm_proj
   }
 
   ##############################
