@@ -16,8 +16,8 @@ be cropped to the input file.}
 \item{diff_factor}{Integer. Faktor after which the extent of the input file will be divided
 into x and y direction.}
 
-\item{length_factor}{Integer. Can be used instead of the diff_factor. Distance in meters of
-one tile n x and y direction.}
+\item{length_factor}{Vector of two integer. Can be used instead of the diff_factor.
+Distance in meters of one tile n x and y direction.}
 }
 \value{
 A fishnet polygon in UTM projection.
@@ -41,6 +41,6 @@ vnm_shp <- raster::shapefile(system.file(package = "SpatialDataToolbox", "extdat
 x1 <- FishnetFunction(my_poly = vnm_shp, extent_only = FALSE, diff_factor = 10)
 
 # Apply length_factor
-x2 <- FishnetFunction(my_poly = vnm_shp, extent_only = FALSE, length_factor = 100000)
+x2 <- FishnetFunction(my_poly = vnm_shp, extent_only = FALSE, length_factor = c(100000,100000))
 
 }

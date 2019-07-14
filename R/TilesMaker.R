@@ -10,8 +10,8 @@
 #' @param diff_factor Integer. Faktor after which the extent of the input file will be divided
 #'                    into x and y direction.
 #'
-#' @param length_factor Integer. Can be used instead of the diff_factor. Distance in meters of
-#'                      one tile in x and y direction.
+#' @param length_factor Vector of two integer. Can be used instead of the diff_factor.
+#'                      Distance in meters of one tile n x and y direction.
 #'
 #' @param out_folder Character string. Path to which the output tiles and fishnet polygon
 #'                   should be written.
@@ -34,7 +34,7 @@
 #' unlink("./Fishnet", recursive = TRUE)
 #'
 #' # Apply length_factor
-#' x2 <- TilesMaker(user_file = my_raster, length_factor = 10000, out_folder = "./")
+#' x2 <- TilesMaker(user_file = my_raster, length_factor = c(10000,10000), out_folder = "./")
 #'
 #'
 #' @export
@@ -218,27 +218,27 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
     ### Apply length_factor approach ###
     ####################################
   } else {
-    print(paste0("Apply length_factor of ", length_factor, " m."))
+    print(paste0("Apply length_factor of x = ", length_factor[1], " m and y = ", length_factor[2], " m."))
     # Define the extent
     my_ext <- raster::extent(my_aoi)
     # Caclulate horizontal and vertical difference
     x_diff <- my_ext[2] - my_ext[1]
     y_diff <- my_ext[4] - my_ext[3]
     # Divide x_diff and y_diff by the length_factor to get the number of tiles in each direction
-    x_number <- x_diff/length_factor
-    y_number <- y_diff/length_factor
+    x_number <- x_diff/length_factor[1]
+    y_number <- y_diff/length_factor[2]
     # use ceiling round up the number of tiles in each direction
     x_number_round <- ceiling(x_number)
     y_number_round <- ceiling(y_number)
     # Calculate x and y tile length of last tile in each direction
-    x_tail <- x_diff - floor(x_number) * length_factor
-    y_tail <- y_diff - floor(y_number) * length_factor
+    x_tail <- x_diff - floor(x_number) * length_factor[1]
+    y_tail <- y_diff - floor(y_number) * length_factor[2]
     # If x_tail and/or y_tail is 0, use the length_factor instead
     if (x_tail == 0){
-      x_tail = length_factor
+      x_tail = length_factor[1]
     }
     if (y_tail == 0){
-      y_tail = length_factor
+      y_tail = length_factor[2]
     }
     # Define vector with letters for naming the polygons
     my_letters <- LETTERS
@@ -248,7 +248,7 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
       # If i == 1 use the max y as a start and subtract the length_factor as end
       if (i == 1){
         y_start <- my_ext[4]
-        y_end <- my_ext[4] - length_factor
+        y_end <- my_ext[4] - length_factor[2]
         # If the last tile is processed, use ymin as the end and ymin + y_tail as start
       } else if (i == y_number_round) {
         y_start <- my_ext[3] + y_tail
@@ -256,15 +256,15 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
         # If i != 1 or != y_number_round: use the max y - (i-1) * the length_factor as a start
         # and subtract i*length_factor as end
       } else {
-        y_start <- my_ext[4] - (i-1)*length_factor
-        y_end <- my_ext[4] - i*length_factor
+        y_start <- my_ext[4] - (i-1)*length_factor[2]
+        y_end <- my_ext[4] - i*length_factor[2]
       }
       # Now define x start and end
       for (j in 1:x_number_round){
         # If j == 1 use the x min as a start and add length_factor as end
         if (j == 1){
           x_start <- my_ext[1]
-          x_end <- my_ext[1] + length_factor
+          x_end <- my_ext[1] + length_factor[1]
           # If the last tile is processed, use xmax as the end and xmax - x_tail as start
         } else if (j == x_number_round){
           x_start <- my_ext[2] - x_tail
@@ -272,8 +272,8 @@ TilesMaker <- function(user_file, user_aoi, diff_factor, length_factor, out_fold
           # If j != 1 or != x_number_round: use the min x - (j-1) * the length_factor as a start
           # and add j*length_factor as end
         } else {
-          x_start <- my_ext[1] + (j-1)*length_factor
-          x_end <- my_ext[1] + j*length_factor
+          x_start <- my_ext[1] + (j-1)*length_factor[1]
+          x_end <- my_ext[1] + j*length_factor[1]
         }
         # Create extent from coordinates
         # Choose this order for starting in the upper left corner

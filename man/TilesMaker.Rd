@@ -14,8 +14,8 @@ TilesMaker(user_file, user_aoi, diff_factor, length_factor, out_folder)
 \item{diff_factor}{Integer. Faktor after which the extent of the input file will be divided
 into x and y direction.}
 
-\item{length_factor}{Integer. Can be used instead of the diff_factor. Distance in meters of
-one tile in x and y direction.}
+\item{length_factor}{Vector of two integer. Can be used instead of the diff_factor.
+Distance in meters of one tile n x and y direction.}
 
 \item{out_folder}{Character string. Path to which the output tiles and fishnet polygon
 should be written.}
@@ -43,7 +43,7 @@ x1 <- TilesMaker(user_file = my_raster, diff_factor = 5, out_folder = "./")
 unlink("./Fishnet", recursive = TRUE)
 
 # Apply length_factor
-x2 <- TilesMaker(user_file = my_raster, length_factor = 10000, out_folder = "./")
+x2 <- TilesMaker(user_file = my_raster, length_factor = c(10000,10000), out_folder = "./")
 
 
 }
