@@ -66,13 +66,13 @@ my_plot
 
 # Execute with all parameters defined.
 # In orer to have a landscape DinA4 format, multiply the width by 1.414286.
-test_complex <- BookletMaker(user_ggplot = my_plot,
-                             user_fishnet = my_fishnet,
-                             fishnet_col = "red",
-                             user_width  = 7 * 1.414286,
-                             user_height = 7,
-                             user_pointsize = NULL,
-                             out_dir = "./",
-                             user_buffer = 0)
+my_booklet <- BookletMaker(user_ggplot = my_plot,
+                           user_fishnet = my_fishnet,
+                           fishnet_col = "red",
+                           user_width  = 7 * 1.414286,
+                           user_height = 7,
+                           user_pointsize = NULL,
+                           out_dir = "./",
+                           user_buffer = 0)
 
 }
