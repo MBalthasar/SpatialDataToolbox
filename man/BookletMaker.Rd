@@ -30,7 +30,7 @@ A gg object containing the original ggplot with the fishnet polygon added on top
 }
 \description{
 This function uses a fishnet polygon to create a map booklet pdf based on a ggplot.
-The booklet contains a overview map with the original ggplot and the fishnet polygon
+The booklet contains an overview map with the original ggplot and the fishnet polygon
 added on top, as well as sub-maps for each tile of the fishnet polygon.
 }
 \examples{
@@ -68,7 +68,7 @@ my_plot
 # In orer to have a landscape DinA4 format, multiply the width by 1.414286.
 test_complex <- BookletMaker(user_ggplot = my_plot,
                              user_fishnet = my_fishnet,
-                             fishnet_col <- "red",
+                             fishnet_col = "red",
                              user_width  = 7 * 1.414286,
                              user_height = 7,
                              user_pointsize = NULL,

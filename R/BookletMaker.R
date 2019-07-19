@@ -1,7 +1,7 @@
 #' Map Booklet Maker
 #'
 #' This function uses a fishnet polygon to create a map booklet pdf based on a ggplot.
-#' The booklet contains a overview map with the original ggplot and the fishnet polygon
+#' The booklet contains an overview map with the original ggplot and the fishnet polygon
 #' added on top, as well as sub-maps for each tile of the fishnet polygon.
 #'
 #' @param user_ggplot A gg object. Input plot which will be used as a basis for the booklet.
@@ -58,7 +58,7 @@
 #' # In orer to have a landscape DinA4 format, multiply the width by 1.414286.
 #' test_complex <- BookletMaker(user_ggplot = my_plot,
 #'                              user_fishnet = my_fishnet,
-#'                              fishnet_col <- "red",
+#'                              fishnet_col = "red",
 #'                              user_width  = 7 * 1.414286,
 #'                              user_height = 7,
 #'                              user_pointsize = NULL,
@@ -124,6 +124,7 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
   ##################
   ### Cover Plot ###
   ##################
+  print(paste0("Working on the overview map"))
   # Add fishnet polygon to user_ggplot
   cover_plot <- user_ggplot +
     geom_polygon(data = fishnet_df, # Define data for polygon
@@ -140,7 +141,7 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
   }
   # Save Cover Map
   grDevices::pdf(paste0(temp_folder, "/1_Cover.pdf"),
-      width = user_width, height = user_height, pointsize = user_pointsize)
+                 width = user_width, height = user_height, pointsize = user_pointsize)
   print(cover_plot)
   grDevices::dev.off()
 
@@ -162,12 +163,15 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
       current_plot <- user_ggplot +
         ggtitle(paste0("Tile ", current_id)) + # Change title
         theme(legend.position="none") + # Remove legend
+        geom_polygon(data = current_tile, # Add current tile
+                     aes(x = long, y = lat, group=group), # Define aesthetics for polygon
+                     colour = fishnet_col, fill = NA) + # Choose line colour and fill with NA
         coord_fixed(xlim = c(current_xlim[1], current_xlim[2]), # Change x limits
                     ylim = c(current_ylim[1], current_ylim[2])) # Change y limits
     )
     # Safe current tile
     grDevices::pdf(paste0(temp_folder,"/", current_id,".pdf"),
-        width = user_width, height = user_height, pointsize = user_pointsize)
+                   width = user_width, height = user_height, pointsize = user_pointsize)
     print(current_plot)
     grDevices::dev.off()
     # Remove redundant variables
