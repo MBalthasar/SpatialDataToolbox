@@ -17,6 +17,7 @@ Functions included in this package are:
   \item \code{\link{SHPDissolve}}
   \item \code{\link{FishnetFunction}}
   \item \code{\link{TilesMaker}}
+  \item \code{\link{BookletMaker}}
 }
 }
 \author{
