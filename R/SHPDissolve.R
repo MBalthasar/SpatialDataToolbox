@@ -58,15 +58,31 @@ SHPDissolve <- function(my_poly, my_col){
     # Create empty polygon based on the input polygon
     # which will be used to add the matching polygons
     current_rbind <- my_poly_subset[0,]
-    # Check for every polygon if the current val is set
-    for (j in 1:nrow(my_poly_subset)){
+    # If current val is NA, we need to apply NA test
+    if (is.na(current_val)){
       # Get current polygon
       current_poly <- my_poly_subset[j,]
       # Define entry
       present_val <- current_poly@data[1,]
       # Check if present_val matches current_val
-      if (present_val == current_val){
+      if (is.na(present_val)){
         current_rbind <- rbind(current_rbind, current_poly)
+      }
+      # If current val is not NA, apply different test
+    } else {
+      # Check for every polygon if the current val is set
+      for (j in 1:nrow(my_poly_subset)){
+        # Get current polygon
+        current_poly <- my_poly_subset[j,]
+        # Define entry
+        present_val <- current_poly@data[1,]
+        # only test if present val is not NA
+        if (!is.na(present_val)){
+          # Check if present_val matches current_val
+          if (present_val == current_val){
+            current_rbind <- rbind(current_rbind, current_poly)
+          }
+        }
       }
     }
     # Dissolve current poly -> This will delete the data.frame
