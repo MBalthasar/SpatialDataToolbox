@@ -19,55 +19,71 @@
 #'
 #' @param user_buffer (optional) Buffer around each tile in m. Default is 0.
 #'
+#' @param add_north (optional) TRUE or FALSE. Adds north arrow.
+#'
+#' @param add_scale (optional) TRUE or FALSE. Adds scalebar.
+#'
 #' @param out_dir A character string. The directory to which the output pdf should be written.
 #'
 #' @return A gg object containing the original ggplot with the fishnet polygon added on top.
 #'
 #' @examples
+#'
 #' library(sp)
 #' library(raster)
 #' library(ggplot2)
+#' library(ggsn)
 #' library(geosphere)
 #' library(RStoolbox)
 #' library(pdftools)
+#' library(magick)
 #'
-#' # Load sample raster file
-#' my_raster <- raster::brick(system.file(package = "SpatialDataToolbox",
-#'                            "extdata", "landsat_sample.tif"))
+#' # Load sample srtm and hillshade
+#' my_srtm <- raster::brick(system.file(package = "SpatialDataToolbox",
+#'                                      "extdata", "srtm_sample.tif"))
+#' my_hill <- raster::brick(system.file(package = "SpatialDataToolbox",
+#'                                      "extdata", "hillshade_sample.tif"))
 #'
-#' # Create fishnet polygon from extent
-#' my_extent <- as(raster::extent(my_raster), 'SpatialPolygons')
-#' proj4string(my_extent) <- sp::CRS(as.character(raster::crs(my_raster)))
-#' my_fishnet <- FishnetFunction(my_poly = my_extent, extent_only = TRUE, diff_factor = 4)
+#' # Use ggR to plot raster files
+#' my_plot <- ggR(my_hill, # Add hillshade
+#'                # maxpixels = my_hill@ncols*my_hill@nrows # Use full resolution
+#' ) +
+#'   ggtitle("SRTM with hillshade") + # Add title
+#'   ggR(my_srtm, geom_raster = TRUE, ggLayer = TRUE, alpha = 0.5, # Add srtm with alpha = 0.5
+#'       # maxpixels = my_srtm@ncols*my_srtm@nrows # Use full resolution
+#'   ) +
+#'   scale_fill_gradientn(colours = terrain.colors(100), # Choose colors for srtm
+#'                        name = "Elevation\nin m") + # Choose name for legend
+#'   theme(plot.title = element_text(hjust = 0.5, face="bold", size=14), # Adjust position + font of title
+#'         axis.text.y = element_text(angle = 90, hjust = 0.5)) + # Vertical y axis labels
+#'   xlab("") + # Remove x lab
+#'   ylab("") # Remove y lab
 #'
-#' # Use ggRGB to make RGB plot of raster
-#' my_plot <- RStoolbox::ggRGB(my_raster, r = 3, g = 2, b = 1, stretch = "lin") +
-#'   ggtitle("Landsat-5 RGB") + # Add title
-#'   theme(plot.title = element_text(hjust = 0.5, face="bold", size=14), # Adjust title
-#'         axis.text.y = element_text(angle = 90, # Vertical y axis labels
-#'                                    hjust = 0.5)) + # Adjust position of axis labels
-#'   scale_x_continuous(expand = c(0,0)) + # Remove expansion in x direction
-#'   scale_y_continuous(expand = c(0,0)) + # Remove expansion in y direction
-#'   xlab("") + # Edit x lab
-#'   ylab("") # Edit y lab
-#'
-#' # Plot the ggplot
+#' # Plot map
 #' my_plot
+#'
+#' # Create fishnet polygon from raster extent
+#' my_extent <- as(raster::extent(my_srtm), 'SpatialPolygons')
+#' proj4string(my_extent) <- sp::CRS(as.character(raster::crs(my_srtm)))
+#' my_fishnet <- FishnetFunction(my_poly = my_extent, extent_only = TRUE, diff_factor = 4)
 #'
 #' # Execute with all parameters defined.
 #' # In orer to have a landscape DinA4 format, multiply the width by 1.414286.
 #' my_booklet <- BookletMaker(user_ggplot = my_plot,
 #'                            user_fishnet = my_fishnet,
-#'                            fishnet_col = "red",
+#'                            fishnet_col = "black",
 #'                            user_width  = 7 * 1.414286,
 #'                            user_height = 7,
 #'                            user_pointsize = NULL,
 #'                            out_dir = "./",
-#'                            user_buffer = 0)
+#'                            user_buffer = 0,
+#'                            add_scale = TRUE,
+#'                            add_north = TRUE)
 #'
 #' @export
 BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
-                         user_height, user_pointsize, user_buffer, out_dir){
+                         user_height, user_pointsize, user_buffer, out_dir,
+                         add_north, add_scale){
   ###########################################
   ### Check for missing output parameters ###
   ###########################################
@@ -87,6 +103,19 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
   if (missing(fishnet_col)){
     fishnet_col <- "black"
   }
+  if (missing(add_scale)){
+    add_scale <- FALSE
+  } else if (add_scale == T){
+    # Check projection of data
+    user_proj <- crs(user_fishnet)
+    # if projection is not in UTM, stop function
+    if (substr(user_proj, 1,9) != "+proj=utm"){
+      stop("Data must be in UTM projection for adding a scalebar")
+    }
+  }
+  if (missing(add_north)){
+    add_north <- FALSE
+  }
 
   ########################################
   ### Create temp folder for the tiles ###
@@ -99,6 +128,12 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
     stop("There is already a folder named temp in the output directory")
   }
   dir.create(temp_folder)
+  # Also create second temp folder for png
+  temp_folder2 <- paste0(temp_folder, "/PNG")
+  dir.create(temp_folder2)
+  # Also create third temp folder for pdf
+  temp_folder3 <- paste0(temp_folder, "/PDF")
+  dir.create(temp_folder3)
 
   #######################
   ### Fishnet Polygon ###
@@ -139,9 +174,32 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
                                         colour = fishnet_col) # Define colour
     rm(i)
   }
-  # Save Cover Map
-  grDevices::pdf(paste0(temp_folder, "/1_Cover.pdf"),
-                 width = user_width, height = user_height, pointsize = user_pointsize)
+  # Add north arrow
+  if (add_north == T){
+    cover_plot <- cover_plot +
+      ggsn::north(fishnet_df) # Use extent of fishnet polygon for north arrow
+  }
+  # Define paramters for scalebar
+  if (add_scale == T){
+    # Get horizontal distance of plot
+    scale_dist_cover <- raster::extent(user_fishnet)[2] - raster::extent(user_fishnet)[1]
+    # Get 1/8 of the horizontal distance
+    scale_dist_cover <- scale_dist_cover/8
+    # Convert m to km
+    scale_dist_cover <- scale_dist_cover/1000
+    # Round number
+    scale_dist_cover <- round(scale_dist_cover)
+    # Add scalebar to current plot
+    cover_plot <- cover_plot +
+      ggsn::scalebar(fishnet_df, # Use extent of fishnet polygon for scalebar
+                     dist = scale_dist_cover, dist_unit = "km", # Define segment distance of scalebar
+                     transform = FALSE, # Define decimal degrees
+                     height = 0.02) # Define height of scalebar
+  }
+  # Save Cover Map as PNG
+  grDevices::png(paste0(temp_folder2, "/1_Cover.png"),
+                 width = user_width, height = user_height, pointsize = user_pointsize,
+                 units = "in", res = 300)
   print(cover_plot)
   grDevices::dev.off()
 
@@ -151,7 +209,12 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
   # Write pdf for every tile
   for (i in 1:nrow(user_fishnet)){
     print(paste0("Working on tile ", i, " of ", nrow(user_fishnet)))
+    # Define current tile
     current_tile <- user_fishnet[i,]
+    # Turn current tile into data.frame
+    suppressMessages(
+      current_tile_df <- fortify(current_tile)
+    )
     # Define x and y limits by looking at he extent of the tile and add buffer
     current_xlim <- c(raster::extent(user_fishnet[i,])[1] - user_buffer,
                       raster::extent(user_fishnet[i,])[2] + user_buffer)
@@ -163,15 +226,41 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
       current_plot <- user_ggplot +
         ggtitle(paste0("Tile ", current_id)) + # Change title
         theme(legend.position="none") + # Remove legend
-        geom_polygon(data = current_tile, # Add current tile
-                     aes(x = long, y = lat, group=group), # Define aesthetics for polygon
-                     colour = fishnet_col, fill = NA) + # Choose line colour and fill with NA
         coord_fixed(xlim = c(current_xlim[1], current_xlim[2]), # Change x limits
                     ylim = c(current_ylim[1], current_ylim[2])) # Change y limits
     )
-    # Safe current tile
-    grDevices::pdf(paste0(temp_folder,"/", current_id,".pdf"),
-                   width = user_width, height = user_height, pointsize = user_pointsize)
+    # Add tile outlines
+    current_plot <- current_plot +
+      geom_polygon(data = current_tile_df, # Define data for polygon
+                   aes(x = long, y = lat, group=group), # Define aesthetics for polygon
+                   colour = fishnet_col, fill = NA) # Choose line colour and fill with NA
+    # Add north arrow to current plot
+    if (add_north == T){
+      current_plot <- current_plot +
+        ggsn::north(current_tile_df) # Use extent of fishnet polygon for north arrow
+    }
+    # Define paramters for scalebar
+    if (add_scale == T){
+      # Get horizontal distance of plot
+      scale_dist_cover <- raster::extent(current_tile)[2] - raster::extent(current_tile)[1]
+      # Get 1/8 of the horizontal distance
+      scale_dist_cover <- scale_dist_cover/8
+      # Convert m to km
+      scale_dist_cover <- scale_dist_cover/1000
+      # Round number
+      scale_dist_cover <- round(scale_dist_cover)
+      # Add scalebar to plot
+      current_plot <- current_plot +
+        ggsn::scalebar(current_tile_df, # Use extent of current tile for scalebar
+                       dist = scale_dist_cover, dist_unit = "km", # Define segment distance of scalebar
+                       transform = FALSE, # Define decimal degrees
+                       height = 0.02, # Define height of scalebar
+                       y.min = y_min_cover)
+    }
+    # Save current tile as png
+    grDevices::png(paste0(temp_folder2,"/", current_id,".png"),
+                   width = user_width, height = user_height, pointsize = user_pointsize,
+                   units = "in", res = 300)
     print(current_plot)
     grDevices::dev.off()
     # Remove redundant variables
@@ -181,10 +270,28 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
   #################################################
   ### Join the individual pdf into one pdf file ###
   #################################################
+  print(paste0("Combining the individual plots into one map booklet"))
   # List paths of the overview image and all tiles
-  temp = list.files(path = temp_folder, pattern="*.pdf$", full.names = T)
+  temp = list.files(path = temp_folder2, pattern="*.png$", full.names = T)
+  # Define vector with names for cover plot and tiles
+  file_names <- c("1_Cover", as.character(user_fishnet$Id))
+  # Convert all png files to pdf
+  for (i in 1:length(temp)){
+    current_file_name <- file_names[i]
+    # Load current png
+    current_png <- magick::image_read(temp[i])
+    # Convert current png to pdf
+    current_pdf <- magick::image_convert(current_png, "pdf")
+    # Write pdf
+    magick::image_write(current_pdf, path = paste0(temp_folder3, "/", current_file_name, ".pdf"),
+                        format = "pdf")
+  }
+  # List paths of the overview image and all tiles as pdf
+  temp2 = list.files(path = temp_folder3, pattern="*.pdf$", full.names = T)
   # Join the individual pdf files into one file
-  pdftools::pdf_combine(input = temp, output = paste0(out_dir, "Booklet.pdf"))
+  suppressMessages(
+    pdftools::pdf_combine(input = temp2, output = paste0(out_dir, "Booklet.pdf"))
+  )
   # Remove the temp folder with its content
   unlink(temp_folder, recursive = TRUE)
 

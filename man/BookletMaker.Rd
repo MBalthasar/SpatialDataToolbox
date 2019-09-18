@@ -5,7 +5,7 @@
 \title{Map Booklet Maker}
 \usage{
 BookletMaker(user_ggplot, user_fishnet, fishnet_col, user_width,
-  user_height, user_pointsize, user_buffer, out_dir)
+  user_height, user_pointsize, user_buffer, out_dir, add_north, add_scale)
 }
 \arguments{
 \item{user_ggplot}{A gg object. Input plot which will be used as a basis for the booklet.}
@@ -24,6 +24,10 @@ See \code{\link{FishnetFunction}}.}
 \item{user_buffer}{(optional) Buffer around each tile in m. Default is 0.}
 
 \item{out_dir}{A character string. The directory to which the output pdf should be written.}
+
+\item{add_north}{(optional) TRUE or FALSE. Adds north arrow.}
+
+\item{add_scale}{(optional) TRUE or FALSE. Adds scalebar.}
 }
 \value{
 A gg object containing the original ggplot with the fishnet polygon added on top.
@@ -34,45 +38,56 @@ The booklet contains an overview map with the original ggplot and the fishnet po
 added on top, as well as sub-maps for each tile of the fishnet polygon.
 }
 \examples{
+
 library(sp)
 library(raster)
 library(ggplot2)
+library(ggsn)
 library(geosphere)
 library(RStoolbox)
 library(pdftools)
+library(magick)
 
-# Load sample raster file
-my_raster <- raster::brick(system.file(package = "SpatialDataToolbox",
-                           "extdata", "landsat_sample.tif"))
+# Load sample srtm and hillshade
+my_srtm <- raster::brick(system.file(package = "SpatialDataToolbox",
+                                     "extdata", "srtm_sample.tif"))
+my_hill <- raster::brick(system.file(package = "SpatialDataToolbox",
+                                     "extdata", "hillshade_sample.tif"))
 
-# Create fishnet polygon from extent
-my_extent <- as(raster::extent(my_raster), 'SpatialPolygons')
-proj4string(my_extent) <- sp::CRS(as.character(raster::crs(my_raster)))
-my_fishnet <- FishnetFunction(my_poly = my_extent, extent_only = TRUE, diff_factor = 4)
+# Use ggR to plot raster files
+my_plot <- ggR(my_hill, # Add hillshade
+               # maxpixels = my_hill@ncols*my_hill@nrows # Use full resolution
+) +
+  ggtitle("SRTM with hillshade") + # Add title
+  ggR(my_srtm, geom_raster = TRUE, ggLayer = TRUE, alpha = 0.5, # Add srtm with alpha = 0.5
+      # maxpixels = my_srtm@ncols*my_srtm@nrows # Use full resolution
+  ) +
+  scale_fill_gradientn(colours = terrain.colors(100), # Choose colors for srtm
+                       name = "Elevation\\nin m") + # Choose name for legend
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=14), # Adjust position + font of title
+        axis.text.y = element_text(angle = 90, hjust = 0.5)) + # Vertical y axis labels
+  xlab("") + # Remove x lab
+  ylab("") # Remove y lab
 
-# Use ggRGB to make RGB plot of raster
-my_plot <- RStoolbox::ggRGB(my_raster, r = 3, g = 2, b = 1, stretch = "lin") +
-  ggtitle("Landsat-5 RGB") + # Add title
-  theme(plot.title = element_text(hjust = 0.5, face="bold", size=14), # Adjust title
-        axis.text.y = element_text(angle = 90, # Vertical y axis labels
-                                   hjust = 0.5)) + # Adjust position of axis labels
-  scale_x_continuous(expand = c(0,0)) + # Remove expansion in x direction
-  scale_y_continuous(expand = c(0,0)) + # Remove expansion in y direction
-  xlab("") + # Edit x lab
-  ylab("") # Edit y lab
-
-# Plot the ggplot
+# Plot map
 my_plot
+
+# Create fishnet polygon from raster extent
+my_extent <- as(raster::extent(my_srtm), 'SpatialPolygons')
+proj4string(my_extent) <- sp::CRS(as.character(raster::crs(my_srtm)))
+my_fishnet <- FishnetFunction(my_poly = my_extent, extent_only = TRUE, diff_factor = 4)
 
 # Execute with all parameters defined.
 # In orer to have a landscape DinA4 format, multiply the width by 1.414286.
 my_booklet <- BookletMaker(user_ggplot = my_plot,
                            user_fishnet = my_fishnet,
-                           fishnet_col = "red",
+                           fishnet_col = "black",
                            user_width  = 7 * 1.414286,
                            user_height = 7,
                            user_pointsize = NULL,
                            out_dir = "./",
-                           user_buffer = 0)
+                           user_buffer = 0,
+                           add_scale = TRUE,
+                           add_north = TRUE)
 
 }
