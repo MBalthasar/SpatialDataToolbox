@@ -82,8 +82,8 @@
 #'
 #' @export
 BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
-                         user_height, user_pointsize, user_buffer, out_dir,
-                         add_north, add_scale){
+                         user_height, user_pointsize, user_buffer, add_north, add_scale,
+                         out_dir){
   ###########################################
   ### Check for missing output parameters ###
   ###########################################
