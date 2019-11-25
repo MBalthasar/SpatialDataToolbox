@@ -7,7 +7,7 @@
 UTMConversion(user_file)
 }
 \arguments{
-\item{user_file}{Can either be a sp object or a raster file.}
+\item{user_file}{Can either be a sp/sf object or a raster file.}
 }
 \value{
 The user_file in UTM projection.

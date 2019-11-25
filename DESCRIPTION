@@ -7,7 +7,7 @@ Maintainer: Marius Philipp <marius.philipp@stud-mail.uni-wuerzburg.de>
 Description: This R package contains several functions which are designed to manipulate spatial data.
              This includes dissolving shapefiles based on feature attributes, converting the projection
              of raster and shapefiles to UTM and subsetting data into smaller tiles.
-Imports: sp, raster, rgdal, rgeos, methods, geosphere, ggplot2, ggsn, RStoolbox, pdftools, magick
+Imports: sp, sf, raster, rgdal, rgeos, methods, geosphere, ggplot2, ggsn, RStoolbox, pdftools, magick
 License: GPL-2
 Encoding: UTF-8
 LazyData: true

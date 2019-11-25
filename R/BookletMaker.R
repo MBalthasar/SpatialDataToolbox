@@ -3,11 +3,12 @@
 #' This function uses a fishnet polygon to create a map booklet pdf based on a ggplot.
 #' The booklet contains an overview map with the original ggplot and the fishnet polygon
 #' added on top, as well as sub-maps for each tile of the fishnet polygon.
+#' This function currently works only for data in UTM projection.
 #'
 #' @param user_ggplot A gg object. Input plot which will be used as a basis for the booklet.
 #'
 #' @param user_fishnet A sp object. For each tile of the fishnet polygon a submap will be created.
-#'                     See \code{\link{FishnetFunction}}.
+#'                     See \code{\link[SpatialDataToolbox]{FishnetFunction}}.
 #'
 #' @param fishnet_col (optional) Colour of the fishnet polygon within the overview map
 #'
@@ -63,7 +64,7 @@
 #' my_plot
 #'
 #' # Create fishnet polygon from raster extent
-#' my_extent <- as(raster::extent(my_srtm), 'SpatialPolygons')
+#' my_extent <- methods::as(raster::extent(my_srtm), 'SpatialPolygons')
 #' proj4string(my_extent) <- sp::CRS(as.character(raster::crs(my_srtm)))
 #' my_fishnet <- FishnetFunction(my_poly = my_extent, extent_only = TRUE, diff_factor = 4)
 #'
@@ -110,7 +111,7 @@ BookletMaker <- function(user_ggplot, user_fishnet, fishnet_col, user_width,
     user_proj <- crs(user_fishnet)
     # if projection is not in UTM, stop function
     if (substr(user_proj, 1,9) != "+proj=utm"){
-      stop("Data must be in UTM projection for adding a scalebar")
+      stop("Data must be in UTM projection.")
     }
   }
   if (missing(add_north)){

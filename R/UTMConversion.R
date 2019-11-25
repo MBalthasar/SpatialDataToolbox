@@ -3,7 +3,7 @@
 #' This function automatically converts a raster or shapefile from a longlat
 #' projection into the corresponding UTM projection.
 #'
-#' @param user_file Can either be a sp object or a raster file.
+#' @param user_file Can either be a sp/sf object or a raster file.
 #'
 #' @return The user_file in UTM projection.
 #'
@@ -44,13 +44,18 @@ UTMConversion <- function(user_file){
   utm_proj <- paste0("+proj=utm +zone=", my_zone, my_hemisphere,
                      " +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
   # Check whether the user_file is either a shapefile or a rasterfile
-  my_file_class <- grepl("raster", tolower(class(user_file)))
+  my_file_class <- grepl("raster", tolower(class(user_file)))[1]
   # If TRUE, it is a raster file
   if (my_file_class == TRUE){
     final_file <- raster::projectRaster(user_file, crs = utm_proj, method = 'bilinear')
     # If FALSE, we're dealing with a shapefile
   } else {
-    final_file <- sp::spTransform(user_file, CRS=utm_proj)
+    # Check if file is a sp or sf object
+    if (class(user_file)[1] == "sf"){
+      final_file <- sf::st_transform(user_file, utm_proj)
+    } else {
+      final_file <- sp::spTransform(user_file, CRS=utm_proj)
+    }
   }
   return(final_file)
 }

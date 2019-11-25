@@ -5,13 +5,13 @@
 \title{Map Booklet Maker}
 \usage{
 BookletMaker(user_ggplot, user_fishnet, fishnet_col, user_width,
-  user_height, user_pointsize, user_buffer, out_dir, add_north, add_scale)
+  user_height, user_pointsize, user_buffer, add_north, add_scale, out_dir)
 }
 \arguments{
 \item{user_ggplot}{A gg object. Input plot which will be used as a basis for the booklet.}
 
 \item{user_fishnet}{A sp object. For each tile of the fishnet polygon a submap will be created.
-See \code{\link{FishnetFunction}}.}
+See \code{\link[SpatialDataToolbox]{FishnetFunction}}.}
 
 \item{fishnet_col}{(optional) Colour of the fishnet polygon within the overview map}
 
@@ -23,11 +23,11 @@ See \code{\link{FishnetFunction}}.}
 
 \item{user_buffer}{(optional) Buffer around each tile in m. Default is 0.}
 
-\item{out_dir}{A character string. The directory to which the output pdf should be written.}
-
 \item{add_north}{(optional) TRUE or FALSE. Adds north arrow.}
 
 \item{add_scale}{(optional) TRUE or FALSE. Adds scalebar.}
+
+\item{out_dir}{A character string. The directory to which the output pdf should be written.}
 }
 \value{
 A gg object containing the original ggplot with the fishnet polygon added on top.
@@ -36,6 +36,7 @@ A gg object containing the original ggplot with the fishnet polygon added on top
 This function uses a fishnet polygon to create a map booklet pdf based on a ggplot.
 The booklet contains an overview map with the original ggplot and the fishnet polygon
 added on top, as well as sub-maps for each tile of the fishnet polygon.
+This function currently works only for data in UTM projection.
 }
 \examples{
 
@@ -73,7 +74,7 @@ my_plot <- ggR(my_hill, # Add hillshade
 my_plot
 
 # Create fishnet polygon from raster extent
-my_extent <- as(raster::extent(my_srtm), 'SpatialPolygons')
+my_extent <- methods::as(raster::extent(my_srtm), 'SpatialPolygons')
 proj4string(my_extent) <- sp::CRS(as.character(raster::crs(my_srtm)))
 my_fishnet <- FishnetFunction(my_poly = my_extent, extent_only = TRUE, diff_factor = 4)
 
