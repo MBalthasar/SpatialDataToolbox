@@ -32,7 +32,7 @@ UTMConversion <- function(user_file){
   }
   # Define extent
   my_extent <- as(raster::extent(user_file), 'SpatialPolygons')
-  sp::proj4string(my_extent) <- sp::CRS(as.character(crs(user_file)))
+  sp::proj4string(my_extent) <- sp::CRS(as.character(raster::crs(user_file)))
   # Get centroid of extent
   my_centroid <- geosphere::centroid(my_extent)
   # Define Zone for UTM projection
